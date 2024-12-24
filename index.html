@@ -297,8 +297,12 @@
             tempCanvas.width = targetWidth;
             tempCanvas.height = targetHeight;
             const tempCtx = tempCanvas.getContext('2d');
-
-            // 使用 drawImage 方法将图片缩放到目标尺寸
+            
+            // 添加白色背景
+            tempCtx.fillStyle = '#FFFFFF';
+            tempCtx.fillRect(0, 0, targetWidth, targetHeight);
+            
+            // 在白色背景上绘制图片
             tempCtx.drawImage(img, 0, 0, targetWidth, targetHeight);
 
             return tempCanvas;
@@ -521,6 +525,11 @@
         function captureFrame() {
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
+            
+            // 添加白色背景
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
             const frameContainer = document.createElement('div');
