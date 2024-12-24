@@ -299,7 +299,7 @@
             const tempCtx = tempCanvas.getContext('2d');
             
             // 添加白色背景
-            tempCtx.fillStyle = '#FFFFFF';
+            // tempCtx.fillStyle = '#FFFFFF';
             tempCtx.fillRect(0, 0, targetWidth, targetHeight);
             
             // 在白色背景上绘制图片
@@ -379,20 +379,30 @@
 
                 // 获取第一帧的尺寸，用于后续保持宽高比
                 const firstFrame = frameData[0].getImage();
-                // 保存GIF原始尺寸到全局变量，供生成时使用
                 window.originalGifWidth = firstFrame.width;
                 window.originalGifHeight = firstFrame.height;
+
+                // 创建一个持久的canvas用于叠加绘制
+                const persistentCanvas = document.createElement('canvas');
+                persistentCanvas.width = firstFrame.width;
+                persistentCanvas.height = firstFrame.height;
+                const persistentCtx = persistentCanvas.getContext('2d');
 
                 // 清空现有帧
                 frames.length = 0;
                 container.innerHTML = '';
 
                 // 处理每一帧
-                frameData.forEach(frame => {
-                    const canvas = frame.getImage();
-                    const frameUrl = canvas.toDataURL('image/png');
+                for (let i = 0; i < frameData.length; i++) {
+                    const frameCanvas = frameData[i].getImage();
+                    
+                    // 在持久canvas上叠加绘制新的帧
+                    persistentCtx.drawImage(frameCanvas, 0, 0);
+                    
+                    // 将当前canvas状态转换为URL并添加到frames数组
+                    const frameUrl = persistentCanvas.toDataURL('image/png');
                     addFrameToUI(frameUrl, container);
-                });
+                }
 
                 screenshotButton.disabled = true;
                 generateGifButton.disabled = false;
@@ -527,7 +537,7 @@
             canvas.height = video.videoHeight;
             
             // 添加白色背景
-            ctx.fillStyle = '#FFFFFF';
+            // ctx.fillStyle = '#FFFFFF';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -576,7 +586,6 @@
             const duration = parseInt(document.getElementById('duration').value);
             const keepAspectRatio = document.getElementById('keepAspectRatio').checked;
             const loop = document.getElementById('loop').checked;
-
             // 修改后的保持宽高比逻辑
             if (keepAspectRatio) {
                 const originalWidth = window.originalGifWidth || video.videoWidth;
