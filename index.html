@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>视频转GIF工具</title>
     <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gif-frames@1.0.1/dist/gif-frames.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -227,8 +228,8 @@
         <h1>视频转GIF工具</h1>
 
         <div class="upload-area" id="uploadArea">
-            <input type="file" id="videoUpload" accept="video/*" style="display: none;">
-            <p>点击或拖拽视频文件到此处</p>
+            <input type="file" id="videoUpload" accept="video/*,image/gif" style="display: none;">
+            <p>点击或拖拽视频/GIF文件到此处</p>
         </div>
 
         <div class="video-container">
@@ -296,10 +297,10 @@
             tempCanvas.width = targetWidth;
             tempCanvas.height = targetHeight;
             const tempCtx = tempCanvas.getContext('2d');
-            
+
             // 使用 drawImage 方法将图片缩放到目标尺寸
             tempCtx.drawImage(img, 0, 0, targetWidth, targetHeight);
-            
+
             return tempCanvas;
         }
 
@@ -330,7 +331,8 @@
             e.preventDefault();
             uploadArea.classList.remove('dragover');
             const file = e.dataTransfer.files[0];
-            if (file && file.type.startsWith('video/')) {
+            console.log('拖放文件:', file.name, file.type); // 调试信息
+            if (file) {
                 handleVideoUpload(file);
             }
         });
@@ -347,10 +349,137 @@
         });
 
         function handleVideoUpload(file) {
+            console.log('文件类型:', file.type); // 调试信息
+            if (file.type.startsWith('video/')) {
+                handleVideo(file);
+            } else if (file.type === 'image/gif') {
+                handleGif(file);
+            } else {
+                alert('不支持的文件类型');
+            }
+        }
+
+        async function handleGif(file) {
+            console.log('开始处理GIF文件:', file.name);
+            const container = document.getElementById('screenshotFrames');
+            container.innerHTML = '<p>正在加载GIF文件...</p>';
+
+            try {
+                const url = URL.createObjectURL(file);
+                // 使用 gif-frames 获取所有帧
+                const frameData = await gifFrames({ 
+                    url: url,
+                    frames: 'all',
+                    outputType: 'canvas'
+                });
+
+                // 获取第一帧的尺寸，用于后续保持宽高比
+                const firstFrame = frameData[0].getImage();
+                // 保存GIF原始尺寸到全局变量，供生成时使用
+                window.originalGifWidth = firstFrame.width;
+                window.originalGifHeight = firstFrame.height;
+
+                // 清空现有帧
+                frames.length = 0;
+                container.innerHTML = '';
+
+                // 处理每一帧
+                frameData.forEach(frame => {
+                    const canvas = frame.getImage();
+                    const frameUrl = canvas.toDataURL('image/png');
+                    addFrameToUI(frameUrl, container);
+                });
+
+                screenshotButton.disabled = true;
+                generateGifButton.disabled = false;
+
+                // 清理
+                URL.revokeObjectURL(url);
+
+            } catch (error) {
+                console.error('GIF处理错误:', error);
+                container.innerHTML = `<p>GIF处理失败: ${error.message}</p>`;
+            }
+        }
+
+        function addFrameToUI(frameUrl, container) {
+            if (!frameUrl || !container) {
+                console.error('无效的参数:', { frameUrl, container });
+                return;
+            }
+
+            const frameContainer = document.createElement('div');
+            frameContainer.className = 'frame';
+
+            const frameImg = new Image();
+            frameImg.onerror = (e) => {
+                console.error('图片加载失败:', e);
+                frameContainer.innerHTML = '<p>帧加载失败</p>';
+            };
+
+            frameImg.src = frameUrl;
+            frameContainer.appendChild(frameImg);
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.innerHTML = '×';
+            deleteBtn.onclick = () => {
+                const index = frames.indexOf(frameUrl);
+                if (index > -1) {
+                    frames.splice(index, 1);
+                }
+                frameContainer.remove();
+                updateFrameCount();
+                checkGenerateButton();
+            };
+
+            frameContainer.appendChild(deleteBtn);
+            container.appendChild(frameContainer);
+            frames.push(frameUrl);
+
+            updateFrameCount();
+            checkGenerateButton();
+        }
+
+        function handleVideo(file) {
             const url = URL.createObjectURL(file);
             video.src = url;
             video.style.display = 'block';
             screenshotButton.disabled = false;
+        }
+
+        function displayGifFrames(frameUrls) {
+            const container = document.getElementById('screenshotFrames');
+            container.innerHTML = '';
+            frames.length = 0; // 清空现有帧
+
+            frameUrls.forEach(frameUrl => {
+                const frameContainer = document.createElement('div');
+                frameContainer.className = 'frame';
+
+                const img = new Image();
+                img.src = frameUrl;
+                frameContainer.appendChild(img);
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.innerHTML = '×';
+                deleteBtn.onclick = () => {
+                    const index = frames.indexOf(frameUrl);
+                    if (index > -1) {
+                        frames.splice(index, 1);
+                    }
+                    frameContainer.remove();
+                    updateFrameCount();
+                    checkGenerateButton();
+                };
+
+                frameContainer.appendChild(deleteBtn);
+                container.appendChild(frameContainer);
+                frames.push(frameUrl);
+            });
+
+            updateFrameCount();
         }
 
         screenshotButton.addEventListener('click', () => {
@@ -358,20 +487,20 @@
                 alert('请先上传视频');
                 return;
             }
-            
+
             // 重置视频到开始位置
             video.currentTime = 0;
-            
+
             // 清除现有帧
             frames.length = 0;
             document.getElementById('screenshotFrames').innerHTML = '';
-            
+
             // 获取截取间隔
             const interval = parseInt(document.getElementById('captureInterval').value);
-            
+
             // 开始自动截取
             video.play();
-            
+
             // 使用 setInterval 定期截取帧
             const captureInterval = setInterval(() => {
                 if (video.currentTime >= video.duration) {
@@ -381,7 +510,7 @@
                 }
                 captureFrame();
             }, interval);
-            
+
             // 视频播放结束时清除定时器
             video.onended = () => {
                 clearInterval(captureInterval);
@@ -432,24 +561,27 @@
 
         generateGifButton.addEventListener('click', async () => {
             if (isProcessing) return;
-            
+
             let width = parseInt(document.getElementById('width').value);
             let height = parseInt(document.getElementById('height').value);
             const duration = parseInt(document.getElementById('duration').value);
             const keepAspectRatio = document.getElementById('keepAspectRatio').checked;
             const loop = document.getElementById('loop').checked;
 
-            // 添加保持宽高比的逻辑
-            if (keepAspectRatio && video.videoWidth && video.videoHeight) {
-                const videoRatio = video.videoWidth / video.videoHeight;
-                const targetRatio = width / height;
+            // 修改后的保持宽高比逻辑
+            if (keepAspectRatio) {
+                const originalWidth = window.originalGifWidth || video.videoWidth;
+                const originalHeight = window.originalGifHeight || video.videoHeight;
                 
-                if (targetRatio > videoRatio) {
-                    // 如果目标比例更宽，以高度为基准调整宽度
-                    width = Math.round(height * videoRatio);
-                } else {
-                    // 如果目标比例更窄，以宽度为基准调整高度
-                    height = Math.round(width / videoRatio);
+                if (originalWidth && originalHeight) {
+                    const originalRatio = originalWidth / originalHeight;
+                    const targetRatio = width / height;
+
+                    if (targetRatio > originalRatio) {
+                        width = Math.round(height * originalRatio);
+                    } else {
+                        height = Math.round(width / originalRatio);
+                    }
                 }
             }
 
@@ -483,7 +615,7 @@
                 });
             }
 
-            gif.on('finished', function(blob) {
+            gif.on('finished', function (blob) {
                 const url = URL.createObjectURL(blob);
                 const gifResult = document.getElementById('gifResult');
                 const downloadLink = document.getElementById('downloadLink');
