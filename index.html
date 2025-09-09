@@ -332,6 +332,7 @@
         const progressText = document.getElementById('progressText');
         const frames = [];
         let isProcessing = false;
+        let draggedItem = null; // 全局变量，用于存储被拖动的元素
 
         // 拖放上传
         uploadArea.addEventListener('dragover', (e) => {
@@ -505,8 +506,6 @@
             checkGenerateButton();
 
             // 添加拖放事件监听器
-            let draggedItem = null; // 用于存储被拖动的元素
-
             frameContainer.addEventListener('dragstart', (e) => {
                 draggedItem = frameContainer;
                 e.dataTransfer.effectAllowed = 'move';
@@ -627,8 +626,6 @@
                 frames.push(frameUrl);
 
                 // 添加拖放事件监听器
-                let draggedItem = null; // 用于存储被拖动的元素
-
                 frameContainer.addEventListener('dragstart', (e) => {
                     draggedItem = frameContainer;
                     e.dataTransfer.effectAllowed = 'move';
@@ -787,8 +784,6 @@
             checkGenerateButton();
 
             // 添加拖放事件监听器
-            let draggedItem = null; // 用于存储被拖动的元素
-
             frameContainer.addEventListener('dragstart', (e) => {
                 draggedItem = frameContainer;
                 e.dataTransfer.effectAllowed = 'move';
