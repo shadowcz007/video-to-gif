@@ -149,6 +149,14 @@
             border: 2px dashed #3498db;
         }
 
+        .frame.drop-target-left {
+            border-left: 2px solid #3498db;
+        }
+
+        .frame.drop-target-right {
+            border-right: 2px solid #3498db;
+        }
+
         .settings {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -511,45 +519,62 @@
 
             frameContainer.addEventListener('dragenter', (e) => {
                 e.preventDefault();
-                if (e.target.closest('.frame') !== draggedItem) {
-                    e.target.closest('.frame').classList.add('drag-over');
-                }
             });
 
             frameContainer.addEventListener('dragover', (e) => {
                 e.preventDefault();
                 e.dataTransfer.dropEffect = 'move';
+
+                const targetRect = frameContainer.getBoundingClientRect();
+                const x = e.clientX - targetRect.left; // 鼠标在目标元素内的X坐标
+
+                // 清除之前的指示器
+                const allFrames = document.querySelectorAll('.frame');
+                allFrames.forEach(frame => {
+                    frame.classList.remove('drop-target-left');
+                    frame.classList.remove('drop-target-right');
+                });
+
+                if (draggedItem !== frameContainer) {
+                    if (x < targetRect.width / 2) {
+                        frameContainer.classList.add('drop-target-left');
+                    } else {
+                        frameContainer.classList.add('drop-target-right');
+                    }
+                }
             });
 
             frameContainer.addEventListener('dragleave', (e) => {
-                e.target.closest('.frame').classList.remove('drag-over');
+                e.target.closest('.frame').classList.remove('drop-target-left', 'drop-target-right');
             });
 
             frameContainer.addEventListener('dragend', () => {
                 draggedItem.style.opacity = '1';
                 const allFrames = document.querySelectorAll('.frame');
-                allFrames.forEach(frame => frame.classList.remove('drag-over'));
+                allFrames.forEach(frame => {
+                    frame.classList.remove('drop-target-left');
+                    frame.classList.remove('drop-target-right');
+                });
                 draggedItem = null;
             });
 
             frameContainer.addEventListener('drop', (e) => {
                 e.preventDefault();
-                e.target.closest('.frame').classList.remove('drag-over');
+                e.target.closest('.frame').classList.remove('drop-target-left', 'drop-target-right');
 
                 if (draggedItem && draggedItem !== frameContainer) {
                     const allFramesContainer = document.getElementById('screenshotFrames');
-                    const framesArray = Array.from(allFramesContainer.children);
-                    const draggedIndex = framesArray.indexOf(draggedItem);
-                    const targetIndex = framesArray.indexOf(frameContainer);
+                    const x = e.clientX - frameContainer.getBoundingClientRect().left;
 
-                    if (draggedIndex > targetIndex) {
+                    if (x < frameContainer.getBoundingClientRect().width / 2) {
+                        // 插入到目标元素之前
                         allFramesContainer.insertBefore(draggedItem, frameContainer);
                     } else {
+                        // 插入到目标元素之后
                         allFramesContainer.insertBefore(draggedItem, frameContainer.nextSibling);
                     }
 
                     // 更新 frames 数组的顺序
-                    const oldFrames = [...frames];
                     frames.length = 0;
                     Array.from(allFramesContainer.children).forEach(node => {
                         const imgElement = node.querySelector('img');
@@ -615,45 +640,62 @@
 
                 frameContainer.addEventListener('dragenter', (e) => {
                     e.preventDefault();
-                    if (e.target.closest('.frame') !== draggedItem) {
-                        e.target.closest('.frame').classList.add('drag-over');
-                    }
                 });
 
                 frameContainer.addEventListener('dragover', (e) => {
                     e.preventDefault();
                     e.dataTransfer.dropEffect = 'move';
+
+                    const targetRect = frameContainer.getBoundingClientRect();
+                    const x = e.clientX - targetRect.left; // 鼠标在目标元素内的X坐标
+
+                    // 清除之前的指示器
+                    const allFrames = document.querySelectorAll('.frame');
+                    allFrames.forEach(frame => {
+                        frame.classList.remove('drop-target-left');
+                        frame.classList.remove('drop-target-right');
+                    });
+
+                    if (draggedItem !== frameContainer) {
+                        if (x < targetRect.width / 2) {
+                            frameContainer.classList.add('drop-target-left');
+                        } else {
+                            frameContainer.classList.add('drop-target-right');
+                        }
+                    }
                 });
 
                 frameContainer.addEventListener('dragleave', (e) => {
-                    e.target.closest('.frame').classList.remove('drag-over');
+                    e.target.closest('.frame').classList.remove('drop-target-left', 'drop-target-right');
                 });
 
                 frameContainer.addEventListener('dragend', () => {
                     draggedItem.style.opacity = '1';
                     const allFrames = document.querySelectorAll('.frame');
-                    allFrames.forEach(frame => frame.classList.remove('drag-over'));
+                    allFrames.forEach(frame => {
+                        frame.classList.remove('drop-target-left');
+                        frame.classList.remove('drop-target-right');
+                    });
                     draggedItem = null;
                 });
 
                 frameContainer.addEventListener('drop', (e) => {
                     e.preventDefault();
-                    e.target.closest('.frame').classList.remove('drag-over');
+                    e.target.closest('.frame').classList.remove('drop-target-left', 'drop-target-right');
 
                     if (draggedItem && draggedItem !== frameContainer) {
                         const allFramesContainer = document.getElementById('screenshotFrames');
-                        const framesArray = Array.from(allFramesContainer.children);
-                        const draggedIndex = framesArray.indexOf(draggedItem);
-                        const targetIndex = framesArray.indexOf(frameContainer);
+                        const x = e.clientX - frameContainer.getBoundingClientRect().left;
 
-                        if (draggedIndex > targetIndex) {
+                        if (x < frameContainer.getBoundingClientRect().width / 2) {
+                            // 插入到目标元素之前
                             allFramesContainer.insertBefore(draggedItem, frameContainer);
                         } else {
+                            // 插入到目标元素之后
                             allFramesContainer.insertBefore(draggedItem, frameContainer.nextSibling);
                         }
 
                         // 更新 frames 数组的顺序
-                        const oldFrames = [...frames];
                         frames.length = 0;
                         Array.from(allFramesContainer.children).forEach(node => {
                             const imgElement = node.querySelector('img');
@@ -758,45 +800,62 @@
 
             frameContainer.addEventListener('dragenter', (e) => {
                 e.preventDefault();
-                if (e.target.closest('.frame') !== draggedItem) {
-                    e.target.closest('.frame').classList.add('drag-over');
-                }
             });
 
             frameContainer.addEventListener('dragover', (e) => {
                 e.preventDefault();
                 e.dataTransfer.dropEffect = 'move';
+
+                const targetRect = frameContainer.getBoundingClientRect();
+                const x = e.clientX - targetRect.left; // 鼠标在目标元素内的X坐标
+
+                // 清除之前的指示器
+                const allFrames = document.querySelectorAll('.frame');
+                allFrames.forEach(frame => {
+                    frame.classList.remove('drop-target-left');
+                    frame.classList.remove('drop-target-right');
+                });
+
+                if (draggedItem !== frameContainer) {
+                    if (x < targetRect.width / 2) {
+                        frameContainer.classList.add('drop-target-left');
+                    } else {
+                        frameContainer.classList.add('drop-target-right');
+                    }
+                }
             });
 
             frameContainer.addEventListener('dragleave', (e) => {
-                e.target.closest('.frame').classList.remove('drag-over');
+                e.target.closest('.frame').classList.remove('drop-target-left', 'drop-target-right');
             });
 
             frameContainer.addEventListener('dragend', () => {
                 draggedItem.style.opacity = '1';
                 const allFrames = document.querySelectorAll('.frame');
-                allFrames.forEach(frame => frame.classList.remove('drag-over'));
+                allFrames.forEach(frame => {
+                    frame.classList.remove('drop-target-left');
+                    frame.classList.remove('drop-target-right');
+                });
                 draggedItem = null;
             });
 
             frameContainer.addEventListener('drop', (e) => {
                 e.preventDefault();
-                e.target.closest('.frame').classList.remove('drag-over');
+                e.target.closest('.frame').classList.remove('drop-target-left', 'drop-target-right');
 
                 if (draggedItem && draggedItem !== frameContainer) {
                     const allFramesContainer = document.getElementById('screenshotFrames');
-                    const framesArray = Array.from(allFramesContainer.children);
-                    const draggedIndex = framesArray.indexOf(draggedItem);
-                    const targetIndex = framesArray.indexOf(frameContainer);
+                    const x = e.clientX - frameContainer.getBoundingClientRect().left;
 
-                    if (draggedIndex > targetIndex) {
+                    if (x < frameContainer.getBoundingClientRect().width / 2) {
+                        // 插入到目标元素之前
                         allFramesContainer.insertBefore(draggedItem, frameContainer);
                     } else {
+                        // 插入到目标元素之后
                         allFramesContainer.insertBefore(draggedItem, frameContainer.nextSibling);
                     }
 
                     // 更新 frames 数组的顺序
-                    const oldFrames = [...frames];
                     frames.length = 0;
                     Array.from(allFramesContainer.children).forEach(node => {
                         const imgElement = node.querySelector('img');
