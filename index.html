@@ -228,8 +228,8 @@
         <h1>视频转GIF工具</h1>
 
         <div class="upload-area" id="uploadArea">
-            <input type="file" id="videoUpload" accept="video/*,image/gif" style="display: none;">
-            <p>点击或拖拽视频/GIF文件到此处</p>
+            <input type="file" id="videoUpload" accept="video/\*,image/\*" style="display: none;">
+            <p>点击或拖拽视频/GIF/图片文件到此处</p>
         </div>
 
         <div class="video-container">
@@ -327,6 +327,19 @@
             uploadArea.classList.add('dragover');
         });
 
+        // 添加粘贴事件监听器
+        uploadArea.addEventListener('paste', (e) => {
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            for (let item of items) {
+                if (item.type.startsWith('image/')) {
+                    const file = item.getAsFile();
+                    if (file) {
+                        handleVideoUpload(file); // 使用 handleVideoUpload 来处理粘贴的图片文件
+                    }
+                }
+            }
+        });
+
         uploadArea.addEventListener('dragleave', () => {
             uploadArea.classList.remove('dragover');
         });
@@ -358,6 +371,8 @@
                 handleVideo(file);
             } else if (file.type === 'image/gif') {
                 handleGif(file);
+            } else if (file.type.startsWith('image/')) {
+                handleImage(file);
             } else {
                 alert('不支持的文件类型');
             }
@@ -414,6 +429,28 @@
                 console.error('GIF处理错误:', error);
                 container.innerHTML = `<p>GIF处理失败: ${error.message}</p>`;
             }
+        }
+
+        function handleImage(file) {
+            console.log('开始处理图片文件:', file.name);
+            const container = document.getElementById('screenshotFrames');
+            container.innerHTML = ''; // 清空现有帧
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    // 设置原始图片尺寸，用于保持宽高比
+                    window.originalGifWidth = img.width;
+                    window.originalGifHeight = img.height;
+                    addFrameToUI(e.target.result, container);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+
+            screenshotButton.disabled = true;
+            generateGifButton.disabled = false;
         }
 
         function addFrameToUI(frameUrl, container) {
