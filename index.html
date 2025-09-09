@@ -145,6 +145,10 @@
             display: block;
         }
 
+        .frame.drag-over {
+            border: 2px dashed #3498db;
+        }
+
         .settings {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -461,6 +465,7 @@
 
             const frameContainer = document.createElement('div');
             frameContainer.className = 'frame';
+            frameContainer.draggable = 'true'; // 允许拖拽
 
             const frameImg = new Image();
             frameImg.onerror = (e) => {
@@ -490,6 +495,72 @@
 
             updateFrameCount();
             checkGenerateButton();
+
+            // 添加拖放事件监听器
+            let draggedItem = null; // 用于存储被拖动的元素
+
+            frameContainer.addEventListener('dragstart', (e) => {
+                draggedItem = frameContainer;
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', frameUrl); // 传递帧的URL
+                // 添加一个小的延迟，以便浏览器可以正确处理拖动元素的样式
+                setTimeout(() => {
+                    frameContainer.style.opacity = '0.5';
+                }, 0);
+            });
+
+            frameContainer.addEventListener('dragenter', (e) => {
+                e.preventDefault();
+                if (e.target.closest('.frame') !== draggedItem) {
+                    e.target.closest('.frame').classList.add('drag-over');
+                }
+            });
+
+            frameContainer.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+            });
+
+            frameContainer.addEventListener('dragleave', (e) => {
+                e.target.closest('.frame').classList.remove('drag-over');
+            });
+
+            frameContainer.addEventListener('dragend', () => {
+                draggedItem.style.opacity = '1';
+                const allFrames = document.querySelectorAll('.frame');
+                allFrames.forEach(frame => frame.classList.remove('drag-over'));
+                draggedItem = null;
+            });
+
+            frameContainer.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.target.closest('.frame').classList.remove('drag-over');
+
+                if (draggedItem && draggedItem !== frameContainer) {
+                    const allFramesContainer = document.getElementById('screenshotFrames');
+                    const framesArray = Array.from(allFramesContainer.children);
+                    const draggedIndex = framesArray.indexOf(draggedItem);
+                    const targetIndex = framesArray.indexOf(frameContainer);
+
+                    if (draggedIndex > targetIndex) {
+                        allFramesContainer.insertBefore(draggedItem, frameContainer);
+                    } else {
+                        allFramesContainer.insertBefore(draggedItem, frameContainer.nextSibling);
+                    }
+
+                    // 更新 frames 数组的顺序
+                    const oldFrames = [...frames];
+                    frames.length = 0;
+                    Array.from(allFramesContainer.children).forEach(node => {
+                        const imgElement = node.querySelector('img');
+                        if (imgElement) {
+                            frames.push(imgElement.src);
+                        }
+                    });
+                    updateFrameCount();
+                    checkGenerateButton();
+                }
+            });
         }
 
         function handleVideo(file) {
@@ -507,6 +578,7 @@
             frameUrls.forEach(frameUrl => {
                 const frameContainer = document.createElement('div');
                 frameContainer.className = 'frame';
+                frameContainer.draggable = 'true'; // 允许拖拽
 
                 const img = new Image();
                 img.src = frameUrl;
@@ -528,6 +600,71 @@
                 frameContainer.appendChild(deleteBtn);
                 container.appendChild(frameContainer);
                 frames.push(frameUrl);
+
+                // 添加拖放事件监听器
+                let draggedItem = null; // 用于存储被拖动的元素
+
+                frameContainer.addEventListener('dragstart', (e) => {
+                    draggedItem = frameContainer;
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', frameUrl); // 传递帧的URL
+                    setTimeout(() => {
+                        frameContainer.style.opacity = '0.5';
+                    }, 0);
+                });
+
+                frameContainer.addEventListener('dragenter', (e) => {
+                    e.preventDefault();
+                    if (e.target.closest('.frame') !== draggedItem) {
+                        e.target.closest('.frame').classList.add('drag-over');
+                    }
+                });
+
+                frameContainer.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                });
+
+                frameContainer.addEventListener('dragleave', (e) => {
+                    e.target.closest('.frame').classList.remove('drag-over');
+                });
+
+                frameContainer.addEventListener('dragend', () => {
+                    draggedItem.style.opacity = '1';
+                    const allFrames = document.querySelectorAll('.frame');
+                    allFrames.forEach(frame => frame.classList.remove('drag-over'));
+                    draggedItem = null;
+                });
+
+                frameContainer.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    e.target.closest('.frame').classList.remove('drag-over');
+
+                    if (draggedItem && draggedItem !== frameContainer) {
+                        const allFramesContainer = document.getElementById('screenshotFrames');
+                        const framesArray = Array.from(allFramesContainer.children);
+                        const draggedIndex = framesArray.indexOf(draggedItem);
+                        const targetIndex = framesArray.indexOf(frameContainer);
+
+                        if (draggedIndex > targetIndex) {
+                            allFramesContainer.insertBefore(draggedItem, frameContainer);
+                        } else {
+                            allFramesContainer.insertBefore(draggedItem, frameContainer.nextSibling);
+                        }
+
+                        // 更新 frames 数组的顺序
+                        const oldFrames = [...frames];
+                        frames.length = 0;
+                        Array.from(allFramesContainer.children).forEach(node => {
+                            const imgElement = node.querySelector('img');
+                            if (imgElement) {
+                                frames.push(imgElement.src);
+                            }
+                        });
+                        updateFrameCount();
+                        checkGenerateButton();
+                    }
+                });
             });
 
             updateFrameCount();
@@ -581,6 +718,7 @@
 
             const frameContainer = document.createElement('div');
             frameContainer.className = 'frame';
+            frameContainer.draggable = 'true'; // 允许拖拽
 
             const img = new Image();
             img.src = canvas.toDataURL('image/png');
@@ -605,6 +743,71 @@
 
             updateFrameCount();
             checkGenerateButton();
+
+            // 添加拖放事件监听器
+            let draggedItem = null; // 用于存储被拖动的元素
+
+            frameContainer.addEventListener('dragstart', (e) => {
+                draggedItem = frameContainer;
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', img.src); // 传递帧的URL
+                setTimeout(() => {
+                    frameContainer.style.opacity = '0.5';
+                }, 0);
+            });
+
+            frameContainer.addEventListener('dragenter', (e) => {
+                e.preventDefault();
+                if (e.target.closest('.frame') !== draggedItem) {
+                    e.target.closest('.frame').classList.add('drag-over');
+                }
+            });
+
+            frameContainer.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+            });
+
+            frameContainer.addEventListener('dragleave', (e) => {
+                e.target.closest('.frame').classList.remove('drag-over');
+            });
+
+            frameContainer.addEventListener('dragend', () => {
+                draggedItem.style.opacity = '1';
+                const allFrames = document.querySelectorAll('.frame');
+                allFrames.forEach(frame => frame.classList.remove('drag-over'));
+                draggedItem = null;
+            });
+
+            frameContainer.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.target.closest('.frame').classList.remove('drag-over');
+
+                if (draggedItem && draggedItem !== frameContainer) {
+                    const allFramesContainer = document.getElementById('screenshotFrames');
+                    const framesArray = Array.from(allFramesContainer.children);
+                    const draggedIndex = framesArray.indexOf(draggedItem);
+                    const targetIndex = framesArray.indexOf(frameContainer);
+
+                    if (draggedIndex > targetIndex) {
+                        allFramesContainer.insertBefore(draggedItem, frameContainer);
+                    } else {
+                        allFramesContainer.insertBefore(draggedItem, frameContainer.nextSibling);
+                    }
+
+                    // 更新 frames 数组的顺序
+                    const oldFrames = [...frames];
+                    frames.length = 0;
+                    Array.from(allFramesContainer.children).forEach(node => {
+                        const imgElement = node.querySelector('img');
+                        if (imgElement) {
+                            frames.push(imgElement.src);
+                        }
+                    });
+                    updateFrameCount();
+                    checkGenerateButton();
+                }
+            });
         }
 
         function updateFrameCount() {
