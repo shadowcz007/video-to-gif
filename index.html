@@ -404,8 +404,8 @@
                 const persistentCtx = persistentCanvas.getContext('2d');
 
                 // 清空现有帧
-                frames.length = 0;
-                container.innerHTML = '';
+                // frames.length = 0;
+                // container.innerHTML = '';
 
                 // 处理每一帧
                 for (let i = 0; i < frameData.length; i++) {
@@ -434,7 +434,7 @@
         function handleImage(file) {
             console.log('开始处理图片文件:', file.name);
             const container = document.getElementById('screenshotFrames');
-            container.innerHTML = ''; // 清空现有帧
+            // 移除: container.innerHTML = ''; // 清空现有帧
 
             const reader = new FileReader();
             reader.onload = (e) => {
